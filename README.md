@@ -1,56 +1,30 @@
-# Welcome to your Expo app 👋
+# Ritmo — MVP visual
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Protótipo mobile em Expo e TypeScript para apoiar estudantes e trabalhadores com TDAH na
+organização de atividades e rotinas, com uma interface mobile-first, clara e sem pressão.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Executar
 
 ```bash
-npm run reset-project
+npm install
+npm run android
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Também é possível iniciar o Expo e abrir o projeto em um dispositivo Android com Expo Go:
 
-### Other setup steps
+```bash
+npm start
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+## Telas do protótipo
 
-## Learn more
+- **Hoje:** agenda de exemplo e convite gentil para registrar uma atividade após a aula.
+- **Atividades:** cadastro visual de nome, prazo e prioridade.
+- **Rotina:** horários editáveis de sono, refeições e foco, além de opção para silenciar lembretes.
+- **Google Agenda:** apresentação da conexão e mensagem neutra para continuar sem conectar.
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+As interações e os dados são temporários e locais à tela. Este MVP não autentica contas Google,
+acessa nem sincroniza o Calendar, envia notificações, persiste sessões ou salva dados. A integração
+OAuth, as permissões reais de Calendar, a renovação de tokens no servidor e a persistência precisam
+ser implementadas em uma etapa posterior.
+"# agente-tdah" 
