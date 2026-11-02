@@ -1,180 +1,275 @@
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ExternalLink } from '@/components/external-link';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ActionButton, Card, colors, PageHeader, Screen, TextField } from '@/components/mvp-ui';
 
-export default function TabTwoScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
-  const theme = useTheme();
+type Priority = 'Alta' | 'Média' | 'Baixa';
+type Activity = { id: number; name: string; due: string; priority: Priority };
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
-    },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
+const starterActivities: Activity[] = [
+  { id: 1, name: 'Projeto de Biologia', due: '12 nov', priority: 'Média' },
+  { id: 2, name: 'Leitura de História', due: '15 nov', priority: 'Baixa' },
+];
+
+export default function ActivitiesScreen() {
+  const [activities, setActivities] = useState(starterActivities);
+  const [isAdding, setIsAdding] = useState(false);
+  const [name, setName] = useState('');
+  const [due, setDue] = useState('');
+  const [priority, setPriority] = useState<Priority>('Média');
+  const [error, setError] = useState('');
+
+  function addActivity() {
+    if (!name.trim() || !due.trim()) {
+      setError('Preencha o nome e o prazo para continuar.');
+      return;
+    }
+
+    setActivities((current) => [
+      { id: Date.now(), name: name.trim(), due: due.trim(), priority },
+      ...current,
+    ]);
+    setName('');
+    setDue('');
+    setPriority('Média');
+    setError('');
+    setIsAdding(false);
+  }
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText>
+    <Screen>
+      <PageHeader
+        eyebrow="SEU ESPAÇO"
+        title="Atividades"
+        subtitle="Tire as tarefas da cabeça e coloque tudo em um só lugar." />
 
-          <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
-                  size={12}
-                />
-              </ThemedView>
-            </Pressable>
-          </ExternalLink>
-        </ThemedView>
+      <ActionButton
+        label={isAdding ? 'Fechar formulário' : '+ Adicionar atividade'}
+        onPress={() => {
+          setIsAdding((current) => !current);
+          setError('');
+        }}
+      />
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+      {isAdding ? (
+        <Card>
+          <Text accessibilityRole="header" style={styles.formTitle}>
+            Nova atividade
+          </Text>
+          <TextField
+            label="Nome"
+            placeholder="Ex.: trabalho de biologia"
+            value={name}
+            onChangeText={setName}
+            returnKeyType="next"
+          />
+          <TextField
+            label="Prazo"
+            placeholder="Ex.: 12/11/2026"
+            value={due}
+            onChangeText={setDue}
+            returnKeyType="done"
+          />
+          <Text style={styles.label}>Prioridade</Text>
+          <View style={styles.priorityRow}>
+            {(['Baixa', 'Média', 'Alta'] as const).map((option) => (
+              <Pressable
+                key={option}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: priority === option }}
+                onPress={() => setPriority(option)}
+                style={[
+                  styles.priorityOption,
+                  priority === option ? styles.prioritySelected : null,
+                ]}>
+                <Text
+                  style={[
+                    styles.priorityText,
+                    priority === option ? styles.priorityTextSelected : null,
+                  ]}>
+                  {option}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
+          <ActionButton label="Salvar atividade" onPress={addActivity} />
+        </Card>
+      ) : null}
 
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
-              />
-            </ThemedView>
-          </Collapsible>
+      <View style={styles.listHeader}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          Próximas
+        </Text>
+        <Text style={styles.countText}>{activities.length} atividades</Text>
+      </View>
 
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+      {activities.map((activity) => (
+        <ActivityCard key={activity.id} activity={activity} />
+      ))}
 
-          <Collapsible title="Light and dark mode components">
-            <ThemedText type="small">
-              This template has light and dark mode support. The{' '}
-              <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+      <Card style={styles.encouragement}>
+        <Text style={styles.encouragementTitle}>Comece pequeno</Text>
+        <Text style={styles.secondaryText}>
+          Uma atividade registrada já é um passo. Você pode ajustar os detalhes depois.
+        </Text>
+      </Card>
+      <Text style={styles.prototypeNote}>Seus dados ficam só nesta tela de demonstração.</Text>
+    </Screen>
+  );
+}
 
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
-          </Collapsible>
-        </ThemedView>
-        {Platform.OS === 'web' && <WebBadge />}
-      </ThemedView>
-    </ScrollView>
+function ActivityCard({ activity }: { activity: Activity }) {
+  const priorityStyle =
+    activity.priority === 'Alta'
+      ? styles.highTag
+      : activity.priority === 'Baixa'
+        ? styles.lowTag
+        : styles.mediumTag;
+
+  return (
+    <Card style={styles.activityCard}>
+      <View style={styles.activityHeading}>
+        <View style={styles.activityMark}>
+          <Text style={styles.activityMarkText}>A</Text>
+        </View>
+        <View style={styles.activityCopy}>
+          <Text style={styles.activityTitle}>{activity.name}</Text>
+          <Text style={styles.secondaryText}>Prazo: {activity.due}</Text>
+        </View>
+      </View>
+      <Text style={[styles.priorityTag, priorityStyle]}>Prioridade {activity.priority.toLowerCase()}</Text>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  formTitle: {
+    color: colors.ink,
+    fontSize: 19,
+    fontWeight: '700',
+  },
+  label: {
+    color: colors.ink,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  priorityRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  priorityOption: {
     flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
   },
-  contentContainer: {
+  prioritySelected: {
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.primary,
+  },
+  priorityText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  priorityTextSelected: {
+    color: colors.primary,
+  },
+  error: {
+    color: '#A64B3F',
+    fontSize: 14,
+  },
+  listHeader: {
     flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'space-between',
+    marginBottom: -10,
+  },
+  sectionTitle: {
+    color: colors.ink,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  countText: {
+    color: colors.muted,
+    fontSize: 13,
+  },
+  activityCard: {
+    gap: 14,
+  },
+  activityHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  activityMark: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    backgroundColor: colors.lavender,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  container: {
-    maxWidth: MaxContentWidth,
-    flexGrow: 1,
+  activityMarkText: {
+    color: '#6C5B8C',
+    fontSize: 17,
+    fontWeight: '700',
   },
-  titleContainer: {
-    gap: Spacing.three,
-    alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
+  activityCopy: {
+    flex: 1,
+    gap: 4,
   },
-  centerText: {
+  activityTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    lineHeight: 22,
+    fontWeight: '700',
+  },
+  secondaryText: {
+    color: colors.muted,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  priorityTag: {
+    alignSelf: 'flex-start',
+    overflow: 'hidden',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  highTag: {
+    color: '#9A493E',
+    backgroundColor: '#F8E8E4',
+  },
+  mediumTag: {
+    color: '#856529',
+    backgroundColor: '#F7F0D9',
+  },
+  lowTag: {
+    color: colors.primary,
+    backgroundColor: colors.primarySoft,
+  },
+  encouragement: {
+    backgroundColor: colors.accentSoft,
+    borderColor: '#F0DED4',
+  },
+  encouragementTitle: {
+    color: colors.ink,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  prototypeNote: {
+    color: colors.muted,
     textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    justifyContent: 'center',
-    gap: Spacing.one,
-    alignItems: 'center',
-  },
-  sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-  },
-  collapsibleContent: {
-    alignItems: 'center',
-  },
-  imageTutorial: {
-    width: '100%',
-    aspectRatio: 296 / 171,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.two,
-  },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
+    fontSize: 12,
+    lineHeight: 18,
   },
 });
