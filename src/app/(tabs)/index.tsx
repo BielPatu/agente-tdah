@@ -3,9 +3,15 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, Card, colors, Screen } from '@/components/mvp-ui';
+import { todayWeekday, useSchedule, WEEKDAY_LABELS } from '@/lib/schedule';
+
+const TIMELINE_COLORS = [colors.primary, '#C18A43', '#8873A8', colors.accent];
 
 export default function TodayScreen() {
   const [showClassPrompt, setShowClassPrompt] = useState(true);
+  const { events } = useSchedule();
+  const today = todayWeekday();
+  const todayClasses = events.filter((event) => event.weekday === today);
 
   return (
     <Screen>
@@ -39,7 +45,7 @@ export default function TodayScreen() {
 
       <View style={styles.sectionHeading}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>
-          Seu dia, com espaço
+          Suas aulas de hoje
         </Text>
         <Link href="/routine" asChild>
           <Pressable accessibilityRole="link">
@@ -49,9 +55,23 @@ export default function TodayScreen() {
       </View>
 
       <Card style={styles.timelineCard}>
-        <TimelineItem time="08:30" title="Aula de Psicologia" detail="Faculdade" color={colors.primary} />
-        <TimelineItem time="12:00" title="Almoço" detail="Pausa para recarregar" color="#C18A43" />
-        <TimelineItem time="14:00" title="Projeto de Biologia" detail="Bloco de foco · 25 min" color="#8873A8" last />
+        {todayClasses.length ? (
+          todayClasses.map((event, index) => (
+            <TimelineItem
+              key={event.id}
+              time={event.start}
+              title={event.title}
+              detail={[`até ${event.end}`, event.location, event.professor].filter(Boolean).join(' · ')}
+              color={TIMELINE_COLORS[index % TIMELINE_COLORS.length]}
+              last={index === todayClasses.length - 1}
+            />
+          ))
+        ) : (
+          <Text style={[styles.mutedText, styles.emptyTimeline]}>
+            Sem aulas na {WEEKDAY_LABELS[today].toLowerCase()}. Um bom espaço para descansar ou
+            adiantar algo pequeno.
+          </Text>
+        )}
       </Card>
 
       {showClassPrompt ? (
@@ -234,6 +254,9 @@ const styles = StyleSheet.create({
   timelineCard: {
     paddingVertical: 3,
     gap: 0,
+  },
+  emptyTimeline: {
+    paddingVertical: 14,
   },
   timelineItem: {
     flexDirection: 'row',

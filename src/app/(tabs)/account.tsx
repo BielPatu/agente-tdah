@@ -2,16 +2,34 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, Card, colors, PageHeader, Screen } from '@/components/mvp-ui';
+import { useAuth } from '@/lib/auth';
+import { useSchedule } from '@/lib/schedule';
 
 export default function AccountScreen() {
   const [message, setMessage] = useState('');
+  const { user, signOut } = useAuth();
+  const { events, resetSetup } = useSchedule();
+
+  async function handleResetSetup() {
+    try {
+      await resetSetup();
+    } catch (e) {
+      console.error('[account] failed to reset schedule', e);
+      setMessage('Não foi possível limpar a agenda agora. Tente de novo.');
+    }
+  }
+
+  async function handleSignOut() {
+    await handleResetSetup();
+    signOut();
+  }
 
   return (
     <Screen>
       <PageHeader
         eyebrow="INTEGRAÇÕES"
         title="Google Agenda"
-        subtitle="Conecte sua agenda quando quiser. Isso é opcional." />
+        subtitle="Sua conta Google e a sincronização da agenda." />
 
       <Card style={styles.googleCard}>
         <View style={styles.googleMark}>
@@ -31,15 +49,21 @@ export default function AccountScreen() {
             eventos da agenda. Você poderá continuar sem conectar.
           </Text>
         </View>
+        <View style={styles.accountBox}>
+          <Text style={styles.permissionTitle}>Conectado como</Text>
+          <Text style={styles.cardTitle}>{user?.name}</Text>
+          <Text style={styles.bodyText}>{user?.email}</Text>
+        </View>
         <ActionButton
-          label="Continuar com Google"
-          onPress={() => setMessage('A conexão com o Google estará disponível em uma próxima etapa.')}
+          label="Sincronizar agenda"
+          onPress={() => setMessage('A sincronização com o Google Agenda estará disponível em uma próxima etapa.')}
         />
         <ActionButton
-          label="Agora não"
+          label={`Refazer configuração da agenda (${events.length} ${events.length === 1 ? 'aula' : 'aulas'})`}
           variant="secondary"
-          onPress={() => setMessage('Tudo bem. Você pode usar o app sem conectar sua agenda.')}
+          onPress={handleResetSetup}
         />
+        <ActionButton label="Sair da conta" variant="secondary" onPress={handleSignOut} />
         {message ? (
           <Text accessibilityRole="status" style={styles.statusMessage}>
             {message}
@@ -50,7 +74,7 @@ export default function AccountScreen() {
       <Card style={styles.privacyCard}>
         <Text style={styles.privacyTitle}>Seus dados e sua escolha</Text>
         <Text style={styles.bodyText}>
-          Este protótipo não inicia sessão, acessa o Google Calendar nem salva credenciais.
+          Neste protótipo o login é simulado: nada é enviado ao Google e a sessão termina ao fechar o app.
           Autenticação, sessão persistente e renovação segura de tokens no servidor ainda precisam
           ser implementadas.
         </Text>
@@ -104,6 +128,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     textAlign: 'center',
+  },
+  accountBox: {
+    padding: 14,
+    gap: 4,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   privacyCard: {
     backgroundColor: colors.surface,
